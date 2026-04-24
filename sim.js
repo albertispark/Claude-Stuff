@@ -578,54 +578,79 @@
     ctx.stroke();
   };
 
-  // ---------- Resonance curve ----------
+  // ---------- Resonance curve (log-y) ----------
   const resCanvas = $("resonance");
   const drawResonance = () => {
     const { ctx, w, h } = fitCanvas(resCanvas);
     ctx.clearRect(0, 0, w, h);
-    const pad = { l: 48, r: 12, t: 10, b: 28 };
+    const pad = { l: 58, r: 12, t: 10, b: 28 };
     const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
 
     const keff = kEff();
     const w0 = Math.sqrt(keff / params.m);
+    const zeta = params.c / (2 * Math.sqrt(params.m * keff));
     const wMin = 0.05 * w0, wMax = 3 * w0;
     const F0 = Math.max(0.001, params.F0);
     const c = Math.max(1e-6, params.c);
     const N = 240;
     const ampAt = (om) => F0 / Math.sqrt(Math.pow(keff - params.m * om * om, 2) + Math.pow(c * om, 2));
 
-    let maxA = 0;
+    // Samples
     const samples = new Array(N + 1);
+    let maxA = 0, minA = Infinity;
     for (let i = 0; i <= N; i++) {
       const om = wMin + (i / N) * (wMax - wMin);
       const A = ampAt(om);
       samples[i] = { om, A };
       if (A > maxA) maxA = A;
+      if (A > 0 && A < minA) minA = A;
     }
-    maxA = Math.max(maxA, 0.001) * 1.1;
+    // Log-scale bounds: show at most 3 decades below peak
+    const logMax = Math.log10(Math.max(maxA, 1e-6) * 1.3);
+    const logMin = Math.max(Math.log10(Math.max(minA, 1e-9)), logMax - 3);
+    const logSpan = Math.max(1e-6, logMax - logMin);
 
-    // Grid
+    const toX = (om) => pad.l + ((om - wMin) / (wMax - wMin)) * plotW;
+    const toY = (A) => {
+      const la = Math.log10(Math.max(A, Math.pow(10, logMin)));
+      return pad.t + plotH - ((la - logMin) / logSpan) * plotH;
+    };
+
+    // Grid (log decades)
     ctx.strokeStyle = "#2a3547"; ctx.lineWidth = 1;
     ctx.font = "10px ui-monospace, monospace";
     ctx.fillStyle = "#8b97a8";
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    for (let i = 0; i <= 4; i++) {
-      const y = pad.t + plotH - (i / 4) * plotH;
+    const firstDecade = Math.ceil(logMin);
+    const lastDecade = Math.floor(logMax);
+    for (let d = firstDecade; d <= lastDecade; d++) {
+      // Decade line + label
+      const y = toY(Math.pow(10, d));
+      ctx.strokeStyle = "#2a3547";
       ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + plotW, y); ctx.stroke();
-      ctx.fillText((i / 4 * maxA).toFixed(2) + " m", pad.l - 4, y);
+      ctx.fillStyle = "#8b97a8";
+      ctx.fillText("10^" + d + " m", pad.l - 4, y);
+      // Minor gridlines at 2,3,...,9
+      for (let m = 2; m <= 9; m++) {
+        const a = m * Math.pow(10, d);
+        if (Math.log10(a) < logMin || Math.log10(a) > logMax) continue;
+        const ym = toY(a);
+        ctx.strokeStyle = "#1e2838";
+        ctx.beginPath(); ctx.moveTo(pad.l, ym); ctx.lineTo(pad.l + plotW, ym); ctx.stroke();
+      }
     }
+    // X grid
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     for (let i = 0; i <= 5; i++) {
       const om = wMin + (i / 5) * (wMax - wMin);
       const x = pad.l + (i / 5) * plotW;
+      ctx.strokeStyle = "#2a3547";
       ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + plotH); ctx.stroke();
+      ctx.fillStyle = "#8b97a8";
       ctx.fillText(om.toFixed(1), x, pad.t + plotH + 4);
     }
     ctx.textAlign = "right";
     ctx.fillText("ω (rad/s)", pad.l + plotW, pad.t + plotH + 16);
-
-    const toX = (om) => pad.l + ((om - wMin) / (wMax - wMin)) * plotW;
-    const toY = (A) => pad.t + plotH - (A / maxA) * plotH;
 
     // ω₀ dashed
     ctx.strokeStyle = "#4cc2ff"; ctx.lineWidth = 1.2;
@@ -656,6 +681,24 @@
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
+
+    // Peak marker: ω_peak = ω₀·√(1 − 2ζ²), exists when ζ < 1/√2
+    if (zeta < 1 / Math.SQRT2) {
+      const wPeak = w0 * Math.sqrt(Math.max(0, 1 - 2 * zeta * zeta));
+      if (wPeak >= wMin && wPeak <= wMax) {
+        const aPeak = ampAt(wPeak);
+        const px = toX(wPeak), py = toY(aPeak);
+        ctx.fillStyle = "#ff9ad5";
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#ff9ad5";
+        ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+        ctx.fillText("peak " + wPeak.toFixed(2) + ", " + aPeak.toFixed(2) + " m", px + 7, py - 4);
+      }
+    }
   };
 
   // ---------- Readouts ----------
