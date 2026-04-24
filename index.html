@@ -4,231 +4,169 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Simple Harmonic Motion Simulator</title>
-<style>
-  :root {
-    --bg: #0f1419;
-    --panel: #1a2230;
-    --panel-2: #222c3d;
-    --text: #e6edf3;
-    --muted: #8b97a8;
-    --accent: #4cc2ff;
-    --accent-2: #ffb454;
-    --danger: #ff6b6b;
-    --grid: #2a3547;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    min-height: 100vh;
-  }
-  header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--grid);
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  header h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
-  header .subtitle { color: var(--muted); font-size: 0.875rem; }
-  .layout {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1rem;
-    padding: 1rem;
-  }
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
-  }
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--grid);
-    border-radius: 8px;
-    padding: 1rem;
-  }
-  .panel h2 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .control {
-    margin-bottom: 0.9rem;
-  }
-  .control label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-bottom: 0.3rem;
-  }
-  .control label .value {
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  }
-  .control input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent);
-  }
-  .control input[type="checkbox"] {
-    margin-right: 0.5rem;
-    accent-color: var(--accent);
-  }
-  .button-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
-  button {
-    background: var(--panel-2);
-    color: var(--text);
-    border: 1px solid var(--grid);
-    border-radius: 6px;
-    padding: 0.55rem 0.75rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  button:hover { background: #2d3a50; border-color: var(--accent); }
-  button.primary { background: var(--accent); color: #0f1419; border-color: var(--accent); font-weight: 600; }
-  button.primary:hover { background: #6dd0ff; }
-  .stage {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  canvas {
-    display: block;
-    width: 100%;
-    background: #0a0f16;
-    border-radius: 6px;
-  }
-  .readout {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
-  .readout .item {
-    background: var(--panel-2);
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-  }
-  .readout .item .k {
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .readout .item .v {
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 0.95rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .legend {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 0.5rem;
-  }
-  .legend .swatch {
-    display: inline-block;
-    width: 14px;
-    height: 3px;
-    vertical-align: middle;
-    margin-right: 0.3rem;
-    border-radius: 2px;
-  }
-  .note {
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin-top: 0.5rem;
-    line-height: 1.4;
-  }
-</style>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
   <h1>Simple Harmonic Motion Simulator</h1>
-  <div class="subtitle">Spring-mass system with damping &amp; driving force</div>
+  <div class="subtitle">Spring-mass system with damping, gravity &amp; driving force</div>
 </header>
 
 <div class="layout">
-  <aside class="panel">
-    <h2>Parameters</h2>
+  <aside class="panel sidebar">
+    <h2>Setup</h2>
 
     <div class="control">
-      <label>Mass <span class="value" id="massValue">1.00 kg</span></label>
-      <input type="range" id="mass" min="0.1" max="5" step="0.05" value="1" />
+      <label>Orientation</label>
+      <div class="segmented" id="orientation">
+        <button data-value="horizontal" class="active">Horizontal</button>
+        <button data-value="vertical">Vertical</button>
+      </div>
     </div>
 
     <div class="control">
-      <label>Spring constant (k) <span class="value" id="kValue">10.0 N/m</span></label>
-      <input type="range" id="k" min="0.5" max="50" step="0.1" value="10" />
+      <label>Environment</label>
+      <select id="environment">
+        <option value="vacuum">Vacuum (c = 0)</option>
+        <option value="air" selected>Air (c ≈ 0.05)</option>
+        <option value="water">Water (c ≈ 1.5)</option>
+        <option value="oil">Oil (c ≈ 4.0)</option>
+        <option value="honey">Honey (c ≈ 8.0)</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+
+    <div class="control" id="gravityRow">
+      <label>Gravity g <span class="value" id="gOut">9.81 m/s²</span></label>
+      <div class="dual">
+        <input type="range" id="gRange" min="0" max="25" step="0.01" value="9.81" />
+        <input type="number" id="gNum" step="0.01" value="9.81" inputmode="decimal" />
+      </div>
+    </div>
+
+    <h2>Mass &amp; Initial Conditions</h2>
+
+    <div class="control">
+      <label>Mass m <span class="value" id="mOut">1.00 kg</span></label>
+      <div class="dual">
+        <input type="range" id="mRange" min="0.1" max="5" step="0.05" value="1" />
+        <input type="number" id="mNum" step="0.01" value="1" inputmode="decimal" />
+      </div>
     </div>
 
     <div class="control">
-      <label>Damping (c) <span class="value" id="cValue">0.00 N·s/m</span></label>
-      <input type="range" id="c" min="0" max="4" step="0.01" value="0" />
+      <label>Initial displacement x₀ <span class="value" id="x0Out">1.00 m</span></label>
+      <div class="dual">
+        <input type="range" id="x0Range" min="-2" max="2" step="0.05" value="1" />
+        <input type="number" id="x0Num" step="0.01" value="1" inputmode="decimal" />
+      </div>
     </div>
 
     <div class="control">
-      <label>Initial displacement <span class="value" id="x0Value">1.00 m</span></label>
-      <input type="range" id="x0" min="-2" max="2" step="0.05" value="1" />
+      <label>Initial velocity v₀ <span class="value" id="v0Out">0.00 m/s</span></label>
+      <div class="dual">
+        <input type="range" id="v0Range" min="-5" max="5" step="0.05" value="0" />
+        <input type="number" id="v0Num" step="0.01" value="0" inputmode="decimal" />
+      </div>
+    </div>
+
+    <h2 id="spring1Title">Spring 1 (Left wall)</h2>
+
+    <div class="control">
+      <label>Stiffness k₁ <span class="value" id="k1Out">10.0 N/m</span></label>
+      <div class="dual">
+        <input type="range" id="k1Range" min="0.5" max="100" step="0.1" value="10" />
+        <input type="number" id="k1Num" step="0.1" value="10" inputmode="decimal" />
+      </div>
     </div>
 
     <div class="control">
-      <label>Initial velocity <span class="value" id="v0Value">0.00 m/s</span></label>
-      <input type="range" id="v0" min="-5" max="5" step="0.05" value="0" />
+      <label>Natural length L₁ <span class="value" id="L1Out">1.00 m</span></label>
+      <div class="dual">
+        <input type="range" id="L1Range" min="0.2" max="3" step="0.05" value="1" />
+        <input type="number" id="L1Num" step="0.01" value="1" inputmode="decimal" />
+      </div>
     </div>
 
-    <h2 style="margin-top:1rem">Driving Force</h2>
+    <h2 id="spring2Title">Spring 2</h2>
+    <div class="control">
+      <label><input type="checkbox" id="spring2Enabled" /> Add second spring (<span id="spring2LocLabel">right wall</span>)</label>
+    </div>
+    <div id="spring2Controls" class="hidden">
+      <div class="control">
+        <label>Stiffness k₂ <span class="value" id="k2Out">10.0 N/m</span></label>
+        <div class="dual">
+          <input type="range" id="k2Range" min="0.5" max="100" step="0.1" value="10" />
+          <input type="number" id="k2Num" step="0.1" value="10" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="control">
+        <label>Natural length L₂ <span class="value" id="L2Out">1.00 m</span></label>
+        <div class="dual">
+          <input type="range" id="L2Range" min="0.2" max="3" step="0.05" value="1" />
+          <input type="number" id="L2Num" step="0.01" value="1" inputmode="decimal" />
+        </div>
+      </div>
+    </div>
+
+    <h2>Damping</h2>
+    <div class="control">
+      <label>Coefficient c <span class="value" id="cOut">0.05 N·s/m</span></label>
+      <div class="dual">
+        <input type="range" id="cRange" min="0" max="15" step="0.01" value="0.05" />
+        <input type="number" id="cNum" step="0.01" value="0.05" inputmode="decimal" disabled />
+      </div>
+    </div>
+    <div class="formula" id="dampingFormula">ζ = c / (2√(m·k)) = 0.008</div>
+
+    <h2>Driving Force</h2>
     <div class="control">
       <label><input type="checkbox" id="driveEnabled" /> Enable driver</label>
     </div>
     <div class="control">
-      <label>Amplitude (F₀) <span class="value" id="fValue">0.00 N</span></label>
-      <input type="range" id="driveF" min="0" max="10" step="0.1" value="2" />
+      <label>Amplitude F₀ <span class="value" id="F0Out">2.00 N</span></label>
+      <div class="dual">
+        <input type="range" id="F0Range" min="0" max="20" step="0.1" value="2" />
+        <input type="number" id="F0Num" step="0.1" value="2" inputmode="decimal" />
+      </div>
     </div>
     <div class="control">
-      <label>Frequency (ω_d) <span class="value" id="wdValue">1.00 rad/s</span></label>
-      <input type="range" id="driveW" min="0.1" max="15" step="0.05" value="3" />
+      <label>Frequency ω_d <span class="value" id="wdOut">3.00 rad/s</span></label>
+      <div class="dual">
+        <input type="range" id="wdRange" min="0.1" max="30" step="0.05" value="3" />
+        <input type="number" id="wdNum" step="0.01" value="3" inputmode="decimal" />
+      </div>
     </div>
 
     <div class="button-row">
       <button id="playBtn" class="primary">Pause</button>
       <button id="resetBtn">Reset</button>
     </div>
-    <div class="button-row" style="grid-template-columns: 1fr;">
-      <button id="clearTraceBtn">Clear graph</button>
+    <div class="button-row single">
+      <button id="clearTraceBtn">Clear graphs</button>
     </div>
 
     <p class="note">
-      Equation: <span style="font-family:ui-monospace,monospace">m·ẍ + c·ẋ + k·x = F₀·cos(ω_d·t)</span>
+      Equation of motion: <span class="mono">m·ẍ + c·ẋ + k_eff·x = F₀·cos(ω_d·t)</span>
     </p>
   </aside>
 
   <main class="stage">
     <div class="panel">
-      <h2>Spring-Mass System</h2>
-      <canvas id="sim" width="800" height="240"></canvas>
+      <h2>System</h2>
+      <canvas id="sim" width="800" height="300"></canvas>
       <div class="readout">
         <div class="item"><div class="k">Time</div><div class="v" id="rTime">0.00 s</div></div>
         <div class="item"><div class="k">Position</div><div class="v" id="rX">0.00 m</div></div>
         <div class="item"><div class="k">Velocity</div><div class="v" id="rV">0.00 m/s</div></div>
         <div class="item"><div class="k">Energy</div><div class="v" id="rE">0.00 J</div></div>
-        <div class="item"><div class="k">Natural ω₀</div><div class="v" id="rW0">0.00 rad/s</div></div>
-        <div class="item"><div class="k">Period T</div><div class="v" id="rT">0.00 s</div></div>
+        <div class="item"><div class="k">k_eff</div><div class="v" id="rKeff">10.0 N/m</div></div>
+        <div class="item"><div class="k">Natural ω₀</div><div class="v" id="rW0">3.16 rad/s</div></div>
+        <div class="item"><div class="k">Period T</div><div class="v" id="rT">1.99 s</div></div>
+        <div class="item"><div class="k">Damping ratio ζ</div><div class="v" id="rZeta">0.008</div></div>
+        <div class="item"><div class="k">Damped ω_d</div><div class="v" id="rWd">3.16 rad/s</div></div>
+        <div class="item"><div class="k">Regime</div><div class="v"><span class="badge under" id="rRegime">Underdamped</span></div></div>
+        <div class="item" id="rDeltaWrap" hidden><div class="k">Gravity stretch Δ</div><div class="v" id="rDelta">0.00 m</div></div>
       </div>
     </div>
 
@@ -236,7 +174,8 @@
       <h2>Time Series</h2>
       <div class="legend">
         <span><span class="swatch" style="background:#4cc2ff"></span>Position x(t)</span>
-        <span><span class="swatch" style="background:#ffb454"></span>Velocity ẋ(t)</span>
+        <span><span class="swatch" style="background:#ffb454"></span>Velocity ẋ(t) (÷3)</span>
+        <span><span class="swatch dashed" style="background:#ff6b6b"></span>Decay envelope</span>
       </div>
       <canvas id="graph" width="800" height="220"></canvas>
     </div>
@@ -248,410 +187,27 @@
       </div>
       <canvas id="phase" width="800" height="220"></canvas>
     </div>
+
+    <div class="panel">
+      <h2>Energy vs Time</h2>
+      <div class="legend">
+        <span><span class="swatch" style="background:#7bd88f"></span>Total mechanical energy E(t) = ½mv² + ½k_eff·x²</span>
+      </div>
+      <canvas id="energy" width="800" height="200"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2>Amplitude vs Driving Frequency</h2>
+      <div class="legend">
+        <span><span class="swatch" style="background:#ff9ad5"></span>A(ω) = F₀ / √((k − mω²)² + (cω)²)</span>
+        <span><span class="swatch dashed" style="background:#4cc2ff"></span>ω₀</span>
+        <span><span class="swatch" style="background:#ffb454"></span>Current ω_d</span>
+      </div>
+      <canvas id="resonance" width="800" height="220"></canvas>
+    </div>
   </main>
 </div>
 
-<script>
-(() => {
-  "use strict";
-
-  const params = {
-    m: 1, k: 10, c: 0, x0: 1, v0: 0,
-    driveEnabled: false, F0: 2, wd: 3,
-  };
-
-  const state = {
-    t: 0, x: params.x0, v: params.v0,
-    running: true,
-  };
-
-  // Trace buffers
-  const MAX_SAMPLES = 1200;
-  const trace = { t: [], x: [], v: [] };
-  const phaseTrace = { x: [], v: [] };
-  const PHASE_MAX = 800;
-
-  // Bind controls
-  const bind = (id, key, fmt) => {
-    const el = document.getElementById(id);
-    const out = document.getElementById(id + "Value");
-    const update = () => {
-      params[key] = parseFloat(el.value);
-      if (out) out.textContent = fmt(params[key]);
-    };
-    el.addEventListener("input", update);
-    update();
-  };
-  bind("mass", "m", v => v.toFixed(2) + " kg");
-  bind("k", "k", v => v.toFixed(1) + " N/m");
-  bind("c", "c", v => v.toFixed(2) + " N·s/m");
-  bind("x0", "x0", v => v.toFixed(2) + " m");
-  bind("v0", "v0", v => v.toFixed(2) + " m/s");
-  bind("driveF", "F0", v => v.toFixed(2) + " N");
-  bind("driveW", "wd", v => v.toFixed(2) + " rad/s");
-
-  const driveCb = document.getElementById("driveEnabled");
-  driveCb.addEventListener("change", () => { params.driveEnabled = driveCb.checked; });
-
-  document.getElementById("playBtn").addEventListener("click", (e) => {
-    state.running = !state.running;
-    e.target.textContent = state.running ? "Pause" : "Play";
-  });
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    state.t = 0;
-    state.x = params.x0;
-    state.v = params.v0;
-    trace.t.length = trace.x.length = trace.v.length = 0;
-    phaseTrace.x.length = phaseTrace.v.length = 0;
-  });
-  document.getElementById("clearTraceBtn").addEventListener("click", () => {
-    trace.t.length = trace.x.length = trace.v.length = 0;
-    phaseTrace.x.length = phaseTrace.v.length = 0;
-  });
-
-  // Force function for the ODE
-  const force = (x, v, t) => {
-    const spring = -params.k * x;
-    const damp = -params.c * v;
-    const drive = params.driveEnabled ? params.F0 * Math.cos(params.wd * t) : 0;
-    return (spring + damp + drive) / params.m;
-  };
-
-  // RK4 integrator for m·ẍ + c·ẋ + k·x = F(t)
-  const rk4Step = (dt) => {
-    const { x, v, t } = state;
-    const k1x = v;
-    const k1v = force(x, v, t);
-    const k2x = v + 0.5 * dt * k1v;
-    const k2v = force(x + 0.5 * dt * k1x, v + 0.5 * dt * k1v, t + 0.5 * dt);
-    const k3x = v + 0.5 * dt * k2v;
-    const k3v = force(x + 0.5 * dt * k2x, v + 0.5 * dt * k2v, t + 0.5 * dt);
-    const k4x = v + dt * k3v;
-    const k4v = force(x + dt * k3x, v + dt * k3v, t + dt);
-    state.x += (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
-    state.v += (dt / 6) * (k1v + 2 * k2v + 2 * k3v + k4v);
-    state.t += dt;
-  };
-
-  // DPI-aware canvas helper
-  const fitCanvas = (canvas) => {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    if (canvas.width !== Math.floor(rect.width * dpr) ||
-        canvas.height !== Math.floor(rect.height * dpr)) {
-      canvas.width = Math.floor(rect.width * dpr);
-      canvas.height = Math.floor(rect.height * dpr);
-    }
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { ctx, w: rect.width, h: rect.height };
-  };
-
-  // ---------- Rendering ----------
-  const simCanvas = document.getElementById("sim");
-  const graphCanvas = document.getElementById("graph");
-  const phaseCanvas = document.getElementById("phase");
-
-  const drawSim = () => {
-    const { ctx, w, h } = fitCanvas(simCanvas);
-    ctx.clearRect(0, 0, w, h);
-
-    const wallX = 60;
-    const baseY = h / 2;
-    const pxPerM = Math.min((w - wallX - 100) / 4, 120);
-    const massX = wallX + pxPerM * (2 + state.x);
-    const massSize = 48;
-
-    // Wall
-    ctx.fillStyle = "#2a3547";
-    ctx.fillRect(wallX - 20, baseY - 70, 20, 140);
-    ctx.strokeStyle = "#3d4c64";
-    for (let i = 0; i < 8; i++) {
-      ctx.beginPath();
-      ctx.moveTo(wallX - 20, baseY - 70 + i * 20);
-      ctx.lineTo(wallX, baseY - 70 + i * 20 + 20);
-      ctx.stroke();
-    }
-
-    // Floor
-    ctx.strokeStyle = "#2a3547";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, baseY + massSize / 2 + 2);
-    ctx.lineTo(w, baseY + massSize / 2 + 2);
-    ctx.stroke();
-
-    // Equilibrium marker
-    const equilibriumX = wallX + pxPerM * 2;
-    ctx.strokeStyle = "#3d4c64";
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(equilibriumX, baseY - 40);
-    ctx.lineTo(equilibriumX, baseY + 40);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#8b97a8";
-    ctx.font = "11px -apple-system, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("x = 0", equilibriumX, baseY + 55);
-
-    // Spring (zigzag)
-    const coils = 14;
-    const springStart = wallX;
-    const springEnd = massX - massSize / 2;
-    const springLen = springEnd - springStart;
-    const amp = 12;
-    ctx.strokeStyle = "#6dd0ff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(springStart, baseY);
-    for (let i = 1; i < coils; i++) {
-      const x = springStart + (i / coils) * springLen;
-      const y = baseY + (i % 2 === 0 ? -amp : amp);
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(springEnd, baseY);
-    ctx.stroke();
-
-    // Mass block
-    ctx.fillStyle = "#4cc2ff";
-    ctx.strokeStyle = "#6dd0ff";
-    ctx.lineWidth = 2;
-    const mx = massX - massSize / 2;
-    const my = baseY - massSize / 2;
-    ctx.beginPath();
-    ctx.roundRect(mx, my, massSize, massSize, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    // Velocity arrow
-    if (Math.abs(state.v) > 0.05) {
-      const arrowLen = Math.sign(state.v) * Math.min(80, Math.abs(state.v) * 20);
-      const ay = baseY;
-      const ax0 = massX;
-      const ax1 = massX + arrowLen;
-      ctx.strokeStyle = "#ffb454";
-      ctx.fillStyle = "#ffb454";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(ax0, ay);
-      ctx.lineTo(ax1, ay);
-      ctx.stroke();
-      const head = 6 * Math.sign(state.v);
-      ctx.beginPath();
-      ctx.moveTo(ax1, ay);
-      ctx.lineTo(ax1 - head, ay - 4);
-      ctx.lineTo(ax1 - head, ay + 4);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Position text
-    ctx.fillStyle = "#e6edf3";
-    ctx.font = "12px ui-monospace, monospace";
-    ctx.textAlign = "center";
-    ctx.fillText(state.x.toFixed(2) + " m", massX, my - 8);
-  };
-
-  const drawGraph = () => {
-    const { ctx, w, h } = fitCanvas(graphCanvas);
-    ctx.clearRect(0, 0, w, h);
-    if (trace.t.length < 2) return;
-
-    const pad = { l: 42, r: 12, t: 10, b: 22 };
-    const plotW = w - pad.l - pad.r;
-    const plotH = h - pad.t - pad.b;
-
-    const t0 = trace.t[0];
-    const t1 = trace.t[trace.t.length - 1];
-    const tRange = Math.max(0.5, t1 - t0);
-
-    let maxVal = 0.1;
-    for (let i = 0; i < trace.x.length; i++) {
-      maxVal = Math.max(maxVal, Math.abs(trace.x[i]), Math.abs(trace.v[i]) / 3);
-    }
-    maxVal *= 1.1;
-
-    // Grid
-    ctx.strokeStyle = "#2a3547";
-    ctx.lineWidth = 1;
-    ctx.font = "10px ui-monospace, monospace";
-    ctx.fillStyle = "#8b97a8";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    for (let i = -2; i <= 2; i++) {
-      const y = pad.t + plotH / 2 - (i / 2) * (plotH / 2);
-      ctx.beginPath();
-      ctx.moveTo(pad.l, y);
-      ctx.lineTo(pad.l + plotW, y);
-      ctx.stroke();
-      ctx.fillText((i / 2 * maxVal).toFixed(1), pad.l - 4, y);
-    }
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    for (let i = 0; i <= 4; i++) {
-      const x = pad.l + (i / 4) * plotW;
-      ctx.beginPath();
-      ctx.moveTo(x, pad.t);
-      ctx.lineTo(x, pad.t + plotH);
-      ctx.stroke();
-      ctx.fillText((t0 + (i / 4) * tRange).toFixed(1) + "s", x, pad.t + plotH + 4);
-    }
-
-    const toY = (v) => pad.t + plotH / 2 - (v / maxVal) * (plotH / 2);
-    const toX = (t) => pad.l + ((t - t0) / tRange) * plotW;
-
-    // Position
-    ctx.strokeStyle = "#4cc2ff";
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    for (let i = 0; i < trace.t.length; i++) {
-      const x = toX(trace.t[i]);
-      const y = toY(trace.x[i]);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    // Velocity (scaled down so both fit nicely)
-    ctx.strokeStyle = "#ffb454";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    for (let i = 0; i < trace.t.length; i++) {
-      const x = toX(trace.t[i]);
-      const y = toY(trace.v[i] / 3);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  };
-
-  const drawPhase = () => {
-    const { ctx, w, h } = fitCanvas(phaseCanvas);
-    ctx.clearRect(0, 0, w, h);
-    if (phaseTrace.x.length < 2) return;
-
-    const pad = 24;
-    let maxX = 0.1, maxV = 0.1;
-    for (let i = 0; i < phaseTrace.x.length; i++) {
-      maxX = Math.max(maxX, Math.abs(phaseTrace.x[i]));
-      maxV = Math.max(maxV, Math.abs(phaseTrace.v[i]));
-    }
-    maxX *= 1.15; maxV *= 1.15;
-
-    const cx = w / 2, cy = h / 2;
-    const sx = (w / 2 - pad) / maxX;
-    const sy = (h / 2 - pad) / maxV;
-
-    // Axes
-    ctx.strokeStyle = "#2a3547";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pad, cy); ctx.lineTo(w - pad, cy);
-    ctx.moveTo(cx, pad); ctx.lineTo(cx, h - pad);
-    ctx.stroke();
-
-    ctx.fillStyle = "#8b97a8";
-    ctx.font = "10px ui-monospace, monospace";
-    ctx.textAlign = "right"; ctx.textBaseline = "top";
-    ctx.fillText("x →", w - pad, cy + 3);
-    ctx.textAlign = "left";
-    ctx.fillText("ẋ ↑", cx + 3, pad);
-
-    // Trajectory - gradient along trace
-    const n = phaseTrace.x.length;
-    for (let i = 1; i < n; i++) {
-      const a = (i / n) * 0.9 + 0.1;
-      ctx.strokeStyle = `rgba(180, 124, 255, ${a})`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx + phaseTrace.x[i - 1] * sx, cy - phaseTrace.v[i - 1] * sy);
-      ctx.lineTo(cx + phaseTrace.x[i] * sx, cy - phaseTrace.v[i] * sy);
-      ctx.stroke();
-    }
-
-    // Current point
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.arc(cx + state.x * sx, cy - state.v * sy, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-  };
-
-  // Readouts
-  const rTime = document.getElementById("rTime");
-  const rX = document.getElementById("rX");
-  const rV = document.getElementById("rV");
-  const rE = document.getElementById("rE");
-  const rW0 = document.getElementById("rW0");
-  const rT = document.getElementById("rT");
-
-  const updateReadouts = () => {
-    const w0 = Math.sqrt(params.k / params.m);
-    const T = (2 * Math.PI) / w0;
-    const E = 0.5 * params.m * state.v * state.v + 0.5 * params.k * state.x * state.x;
-    rTime.textContent = state.t.toFixed(2) + " s";
-    rX.textContent = state.x.toFixed(3) + " m";
-    rV.textContent = state.v.toFixed(3) + " m/s";
-    rE.textContent = E.toFixed(3) + " J";
-    rW0.textContent = w0.toFixed(2) + " rad/s";
-    rT.textContent = T.toFixed(2) + " s";
-  };
-
-  // Main loop
-  let lastFrame = performance.now();
-  let sampleAccum = 0;
-  const SAMPLE_INTERVAL = 1 / 120; // seconds between samples
-
-  const frame = (now) => {
-    const dtReal = Math.min(0.05, (now - lastFrame) / 1000);
-    lastFrame = now;
-
-    if (state.running) {
-      // Substeps for stability
-      const target = dtReal;
-      const substeps = Math.max(4, Math.ceil(target / 0.002));
-      const h = target / substeps;
-      for (let i = 0; i < substeps; i++) rk4Step(h);
-
-      sampleAccum += target;
-      while (sampleAccum >= SAMPLE_INTERVAL) {
-        sampleAccum -= SAMPLE_INTERVAL;
-        trace.t.push(state.t);
-        trace.x.push(state.x);
-        trace.v.push(state.v);
-        if (trace.t.length > MAX_SAMPLES) {
-          trace.t.shift(); trace.x.shift(); trace.v.shift();
-        }
-        phaseTrace.x.push(state.x);
-        phaseTrace.v.push(state.v);
-        if (phaseTrace.x.length > PHASE_MAX) {
-          phaseTrace.x.shift(); phaseTrace.v.shift();
-        }
-      }
-    }
-
-    drawSim();
-    drawGraph();
-    drawPhase();
-    updateReadouts();
-
-    requestAnimationFrame(frame);
-  };
-
-  // Polyfill for roundRect on older browsers
-  if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-      this.beginPath();
-      this.moveTo(x + r, y);
-      this.arcTo(x + w, y, x + w, y + h, r);
-      this.arcTo(x + w, y + h, x, y + h, r);
-      this.arcTo(x, y + h, x, y, r);
-      this.arcTo(x, y, x + w, y, r);
-      this.closePath();
-      return this;
-    };
-  }
-
-  requestAnimationFrame(frame);
-})();
-</script>
+<script src="sim.js"></script>
 </body>
 </html>
