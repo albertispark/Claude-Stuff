@@ -128,6 +128,7 @@
     state.t = 0;
     state.x = params.x0;
     state.v = params.v0;
+    applyWallConstraints();
     trace.t.length = trace.x.length = trace.v.length = trace.E.length = 0;
     phaseTrace.x.length = phaseTrace.v.length = 0;
   });
@@ -157,6 +158,31 @@
     state.x += (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
     state.v += (dt / 6) * (k1v + 2 * k2v + 2 * k3v + k4v);
     state.t += dt;
+  };
+
+  // Wall constraint: spring length can't go below 0. Elastic bounce.
+  // Horizontal: x in [-L1, +L2 if spring2 else +∞]
+  // Vertical (with gravity offset Δ): x in [-(L1+Δ), L2-Δ if spring2 else +∞]
+  const applyWallConstraints = () => {
+    const L1 = params.spring1.L;
+    const L2 = params.spring2.L;
+    let xMin, xMax;
+    if (params.orientation === "vertical") {
+      const delta = params.m * params.g / Math.max(0.001, kEff());
+      xMin = -(L1 + delta);
+      xMax = params.spring2.enabled ? (L2 - delta) : Infinity;
+    } else {
+      xMin = -L1;
+      xMax = params.spring2.enabled ? L2 : Infinity;
+    }
+    if (state.x < xMin) {
+      state.x = xMin;
+      if (state.v < 0) state.v = -state.v;
+    }
+    if (state.x > xMax) {
+      state.x = xMax;
+      if (state.v > 0) state.v = -state.v;
+    }
   };
 
   // ---------- Canvas helpers ----------
@@ -755,7 +781,10 @@
     if (state.running) {
       const subs = Math.max(4, Math.ceil(dt / 0.002));
       const h = dt / subs;
-      for (let i = 0; i < subs; i++) rk4Step(h);
+      for (let i = 0; i < subs; i++) {
+        rk4Step(h);
+        applyWallConstraints();
+      }
 
       sampleAccum += dt;
       while (sampleAccum >= SAMPLE_INTERVAL) {
