@@ -64,6 +64,14 @@ header .subtitle { color: var(--muted); font-size: 0.875rem; }
   letter-spacing: 0.05em;
 }
 .panel h2:not(:first-child) { margin-top: 1rem; }
+.panel h3 {
+  margin: 0.75rem 0 0.4rem 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
 .control { margin-bottom: 0.75rem; }
 .control label {
@@ -88,6 +96,13 @@ header .subtitle { color: var(--muted); font-size: 0.875rem; }
   margin-right: 0.5rem;
   accent-color: var(--accent);
 }
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
 .dual {
   display: grid;
   grid-template-columns: 1fr 84px;
@@ -104,10 +119,6 @@ header .subtitle { color: var(--muted); font-size: 0.875rem; }
   font-size: 0.85rem;
   width: 100%;
   min-width: 0;
-}
-.dual input[type="number"]:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 .dual input[type="number"]:focus {
   outline: none;
@@ -154,8 +165,9 @@ select:focus { outline: none; border-color: var(--accent); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
 }
+.button-row.triple { grid-template-columns: 1fr 1fr 1fr; }
 .button-row.single { grid-template-columns: 1fr; }
 button {
   background: var(--panel-2);
@@ -171,6 +183,8 @@ button {
 button:hover { background: #2d3a50; border-color: var(--accent); }
 button.primary { background: var(--accent); color: #0f1419; border-color: var(--accent); font-weight: 600; }
 button.primary:hover { background: #6dd0ff; }
+button.warn { border-color: rgba(255,180,84,0.55); color: var(--accent-2); }
+button.warn.active { background: var(--accent-2); color: #0f1419; }
 
 .stage {
   display: flex;
@@ -184,41 +198,65 @@ canvas {
   border-radius: 6px;
 }
 
-.readout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+.canvas-wrap {
+  position: relative;
 }
-.readout .item {
+.canvas-wrap.polar canvas {
+  aspect-ratio: 1 / 1;
+  max-height: 70vh;
+}
+.canvas-wrap.strip canvas {
+  height: 220px;
+}
+
+.challenge-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 20, 25, 0.92);
+  border: 1px dashed var(--accent-2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+}
+.challenge-overlay .title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+.challenge-overlay .body {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.hud .item {
   background: var(--panel-2);
   border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.6rem;
 }
-.readout .item .k {
+.hud .item .k {
   font-size: 0.7rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.readout .item .v {
+.hud .item .v {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
 }
-
-.badge {
-  display: inline-block;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  font-family: inherit;
-}
-.badge.undamped { background: #3d4c64; color: #d0d8e5; }
-.badge.under    { background: rgba(76,194,255,0.18);  color: var(--accent); border: 1px solid rgba(76,194,255,0.45); }
-.badge.critical { background: rgba(255,180,84,0.18); color: var(--accent-2); border: 1px solid rgba(255,180,84,0.5); }
-.badge.over     { background: rgba(255,107,107,0.18); color: var(--danger); border: 1px solid rgba(255,107,107,0.5); }
 
 .legend {
   display: flex;
@@ -236,23 +274,81 @@ canvas {
   margin-right: 0.3rem;
   border-radius: 2px;
 }
-.legend .swatch.dashed {
-  background-image: linear-gradient(to right, currentColor 50%, transparent 50%);
-  background-size: 6px 3px;
+.legend .swatch.dot {
+  width: 10px; height: 10px; border-radius: 50%; border: 1px solid currentColor;
 }
-.note {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 0.5rem;
-  line-height: 1.4;
-}
+.legend .swatch.dot.filled { background: currentColor; }
+
 .formula {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--muted);
+  color: var(--text);
   background: var(--panel-2);
   border: 1px solid var(--grid);
   border-radius: 4px;
-  padding: 0.35rem 0.5rem;
+  padding: 0.5rem 0.6rem;
   margin-bottom: 0.75rem;
+}
+
+.about-panel p { margin: 0.4rem 0 0.75rem 0; line-height: 1.5; font-size: 0.9rem; }
+.about-panel ul, .about-panel ol {
+  margin: 0.25rem 0 0.75rem 1.25rem;
+  padding: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.about-panel ul li, .about-panel ol li { margin-bottom: 0.3rem; }
+.about-panel .symmetry-line {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-left: 3px solid var(--violet);
+  padding: 0.5rem 0.6rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+.about-panel .symmetry-line strong { color: var(--violet); }
+
+.logic-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+.logic-panel summary::-webkit-details-marker { display: none; }
+.logic-panel summary::before {
+  content: "▾ ";
+  display: inline-block;
+  margin-right: 0.25rem;
+  transition: transform 0.15s;
+}
+.logic-panel:not([open]) summary::before { transform: rotate(-90deg); }
+.logic-panel h3 { color: var(--ok); }
+.logic-panel p { font-size: 0.88rem; line-height: 1.55; margin: 0.25rem 0 0.6rem 0; color: var(--text); }
+.logic-panel ul { margin: 0.25rem 0 0.6rem 1.25rem; font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+.logic-panel ul li { margin-bottom: 0.25rem; }
+.logic-panel .callout {
+  border-left: 3px solid var(--accent);
+  padding: 0.4rem 0.6rem;
+  background: var(--panel-2);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+.logic-panel .callout strong { color: var(--accent); }
+
+.kbd {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  background: var(--panel-2);
+  border: 1px solid var(--grid);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8rem;
 }

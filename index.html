@@ -1,213 +1,209 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Simple Harmonic Motion Simulator</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Polar-Coordinates Sketcher</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header>
-  <h1>Simple Harmonic Motion Simulator</h1>
-  <div class="subtitle">Spring-mass system with damping, gravity &amp; driving force</div>
-</header>
+  <header>
+    <h1>Polar-Coordinates Sketcher</h1>
+    <span class="subtitle">Train your instinct: r-vs-θ first, then translate to the polar plane.</span>
+  </header>
 
-<div class="layout">
-  <aside class="panel sidebar">
-    <h2>Setup</h2>
-
-    <div class="control">
-      <label>Orientation</label>
-      <div class="segmented" id="orientation">
-        <button data-value="horizontal" class="active">Horizontal</button>
-        <button data-value="vertical">Vertical</button>
-      </div>
-    </div>
-
-    <div class="control">
-      <label>Environment</label>
-      <select id="environment">
-        <option value="vacuum">Vacuum (c = 0)</option>
-        <option value="air" selected>Air (c ≈ 0.05)</option>
-        <option value="water">Water (c ≈ 1.5)</option>
-        <option value="oil">Oil (c ≈ 4.0)</option>
-        <option value="honey">Honey (c ≈ 8.0)</option>
-        <option value="custom">Custom</option>
-      </select>
-    </div>
-
-    <div class="control" id="gravityRow">
-      <label>Gravity g <span class="value" id="gOut">9.81 m/s²</span></label>
-      <div class="dual">
-        <input type="range" id="gRange" min="0" max="25" step="0.01" value="9.81" />
-        <input type="number" id="gNum" step="0.01" value="9.81" inputmode="decimal" />
-      </div>
-    </div>
-
-    <h2>Mass &amp; Initial Conditions</h2>
-
-    <div class="control">
-      <label>Mass m <span class="value" id="mOut">1.00 kg</span></label>
-      <div class="dual">
-        <input type="range" id="mRange" min="0.1" max="5" step="0.05" value="1" />
-        <input type="number" id="mNum" step="0.01" value="1" inputmode="decimal" />
-      </div>
-    </div>
-
-    <div class="control">
-      <label>Initial displacement x₀ <span class="value" id="x0Out">1.00 m</span></label>
-      <div class="dual">
-        <input type="range" id="x0Range" min="-2" max="2" step="0.05" value="1" />
-        <input type="number" id="x0Num" step="0.01" value="1" inputmode="decimal" />
-      </div>
-    </div>
-
-    <div class="control">
-      <label>Initial velocity v₀ <span class="value" id="v0Out">0.00 m/s</span></label>
-      <div class="dual">
-        <input type="range" id="v0Range" min="-5" max="5" step="0.05" value="0" />
-        <input type="number" id="v0Num" step="0.01" value="0" inputmode="decimal" />
-      </div>
-    </div>
-
-    <h2 id="spring1Title">Spring 1 (Left wall)</h2>
-
-    <div class="control">
-      <label>Stiffness k₁ <span class="value" id="k1Out">10.0 N/m</span></label>
-      <div class="dual">
-        <input type="range" id="k1Range" min="0.5" max="100" step="0.1" value="10" />
-        <input type="number" id="k1Num" step="0.1" value="10" inputmode="decimal" />
-      </div>
-    </div>
-
-    <div class="control">
-      <label>Natural length L₁ <span class="value" id="L1Out">1.00 m</span></label>
-      <div class="dual">
-        <input type="range" id="L1Range" min="0.2" max="3" step="0.05" value="1" />
-        <input type="number" id="L1Num" step="0.01" value="1" inputmode="decimal" />
-      </div>
-    </div>
-
-    <h2 id="spring2Title">Spring 2</h2>
-    <div class="control">
-      <label><input type="checkbox" id="spring2Enabled" /> Add second spring (<span id="spring2LocLabel">right wall</span>)</label>
-    </div>
-    <div id="spring2Controls" class="hidden">
+  <div class="layout">
+    <aside class="sidebar panel">
+      <h2>Curve</h2>
       <div class="control">
-        <label>Stiffness k₂ <span class="value" id="k2Out">10.0 N/m</span></label>
+        <select id="curve">
+          <option value="circle">Circle, centred at origin (r = a)</option>
+          <option value="offsetCircle">Off-centre circle (r = 2a·cos θ)</option>
+          <option value="rose" selected>Rose (r = a·cos kθ)</option>
+          <option value="cardioid">Cardioid (r = a(1 + cos θ))</option>
+          <option value="limacon">Limaçon (r = a + b·cos θ)</option>
+          <option value="archimedean">Archimedean spiral (r = a + bθ)</option>
+          <option value="lemniscate">Lemniscate (r² = a²·cos 2θ)</option>
+          <option value="logSpiral">Logarithmic spiral (r = a·e^{bθ})</option>
+        </select>
+      </div>
+
+      <div id="variantRow" class="control hidden">
+        <label>Variant <span class="value" id="variantOut">cos</span></label>
+        <div class="segmented" id="variant">
+          <button data-value="cos" class="active">cos</button>
+          <button data-value="sin">sin</button>
+        </div>
+      </div>
+
+      <div id="paramHost"></div>
+
+      <h2>θ range</h2>
+      <div class="control">
+        <label>θ<sub>min</sub> <span class="value" id="tMinOut">0</span></label>
         <div class="dual">
-          <input type="range" id="k2Range" min="0.5" max="100" step="0.1" value="10" />
-          <input type="number" id="k2Num" step="0.1" value="10" inputmode="decimal" />
+          <input type="range" id="tMinRange" min="-25.13" max="25.13" step="0.01" value="0" />
+          <input type="number" id="tMinNum" step="0.01" value="0" />
         </div>
       </div>
       <div class="control">
-        <label>Natural length L₂ <span class="value" id="L2Out">1.00 m</span></label>
+        <label>θ<sub>max</sub> <span class="value" id="tMaxOut">2π</span></label>
         <div class="dual">
-          <input type="range" id="L2Range" min="0.2" max="3" step="0.05" value="1" />
-          <input type="number" id="L2Num" step="0.01" value="1" inputmode="decimal" />
+          <input type="range" id="tMaxRange" min="-25.13" max="25.13" step="0.01" value="6.2832" />
+          <input type="number" id="tMaxNum" step="0.01" value="6.2832" />
         </div>
       </div>
-    </div>
-
-    <h2>Damping</h2>
-    <div class="control">
-      <label>Coefficient c <span class="value" id="cOut">0.05 N·s/m</span></label>
-      <div class="dual">
-        <input type="range" id="cRange" min="0" max="15" step="0.01" value="0.05" />
-        <input type="number" id="cNum" step="0.01" value="0.05" inputmode="decimal" disabled />
+      <div class="control">
+        <label>Sweep speed <span class="value" id="speedOut">1.5 rad/s</span></label>
+        <div class="dual">
+          <input type="range" id="speedRange" min="0.1" max="6" step="0.05" value="1.5" />
+          <input type="number" id="speedNum" step="0.05" value="1.5" />
+        </div>
       </div>
-    </div>
-    <div class="formula" id="dampingFormula">ζ = c / (2√(m·k)) = 0.008</div>
 
-    <h2>Driving Force</h2>
-    <div class="control">
-      <label><input type="checkbox" id="driveEnabled" /> Enable driver</label>
-    </div>
-    <div class="control">
-      <label>Amplitude F₀ <span class="value" id="F0Out">2.00 N</span></label>
-      <div class="dual">
-        <input type="range" id="F0Range" min="0" max="20" step="0.1" value="2" />
-        <input type="number" id="F0Num" step="0.1" value="2" inputmode="decimal" />
+      <h2>Mode</h2>
+      <div class="button-row triple">
+        <button id="playBtn" class="primary">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
       </div>
-    </div>
-    <div class="control">
-      <label>Frequency ω_d <span class="value" id="wdOut">3.00 rad/s</span></label>
-      <div class="dual">
-        <input type="range" id="wdRange" min="0.1" max="30" step="0.05" value="3" />
-        <input type="number" id="wdNum" step="0.01" value="3" inputmode="decimal" />
+      <div class="button-row">
+        <button id="stepBackBtn">◀ Step</button>
+        <button id="stepFwdBtn">Step ▶</button>
       </div>
-    </div>
-
-    <div class="button-row">
-      <button id="playBtn" class="primary">Pause</button>
-      <button id="resetBtn">Reset</button>
-    </div>
-    <div class="button-row single">
-      <button id="clearTraceBtn">Clear graphs</button>
-    </div>
-
-    <p class="note">
-      Equation of motion: <span class="mono">m·ẍ + c·ẋ + k_eff·x = F₀·cos(ω_d·t)</span>
-    </p>
-  </aside>
-
-  <main class="stage">
-    <div class="panel">
-      <h2>System</h2>
-      <canvas id="sim" width="800" height="300"></canvas>
-      <div class="readout">
-        <div class="item"><div class="k">Time</div><div class="v" id="rTime">0.00 s</div></div>
-        <div class="item"><div class="k">Position</div><div class="v" id="rX">0.00 m</div></div>
-        <div class="item"><div class="k">Velocity</div><div class="v" id="rV">0.00 m/s</div></div>
-        <div class="item"><div class="k">Energy</div><div class="v" id="rE">0.00 J</div></div>
-        <div class="item"><div class="k">k_eff</div><div class="v" id="rKeff">10.0 N/m</div></div>
-        <div class="item"><div class="k">Natural ω₀</div><div class="v" id="rW0">3.16 rad/s</div></div>
-        <div class="item"><div class="k">Period T</div><div class="v" id="rT">1.99 s</div></div>
-        <div class="item"><div class="k">Damping ratio ζ</div><div class="v" id="rZeta">0.008</div></div>
-        <div class="item"><div class="k">Damped ω_d</div><div class="v" id="rWd">3.16 rad/s</div></div>
-        <div class="item"><div class="k">Regime</div><div class="v"><span class="badge under" id="rRegime">Underdamped</span></div></div>
-        <div class="item" id="rDeltaWrap" hidden><div class="k">Gravity stretch Δ</div><div class="v" id="rDelta">0.00 m</div></div>
+      <div class="button-row single">
+        <button id="challengeBtn" class="warn">Challenge mode</button>
       </div>
-    </div>
 
-    <div class="panel">
-      <h2>Time Series</h2>
-      <div class="legend">
-        <span><span class="swatch" style="background:#4cc2ff"></span>Position x(t)</span>
-        <span><span class="swatch" style="background:#ffb454"></span>Velocity ẋ(t) (÷3)</span>
-        <span><span class="swatch dashed" style="background:#ff6b6b"></span>Decay envelope</span>
+      <h2>Display</h2>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optDegrees" /> <label for="optDegrees">Label angles in degrees</label>
       </div>
-      <canvas id="graph" width="800" height="220"></canvas>
-    </div>
-
-    <div class="panel">
-      <h2>Phase Space</h2>
-      <div class="legend">
-        <span><span class="swatch" style="background:#b47cff"></span>(x, ẋ)</span>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optCartesian" /> <label for="optCartesian">Cartesian axes overlay</label>
       </div>
-      <canvas id="phase" width="800" height="220"></canvas>
-    </div>
-
-    <div class="panel">
-      <h2>Energy vs Time</h2>
-      <div class="legend">
-        <span><span class="swatch" style="background:#7bd88f"></span>Total mechanical energy E(t) = ½mv² + ½k_eff·x²</span>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optRadius" checked /> <label for="optRadius">Swept radius line</label>
       </div>
-      <canvas id="energy" width="800" height="200"></canvas>
-    </div>
-
-    <div class="panel">
-      <h2>Amplitude vs Driving Frequency</h2>
-      <div class="legend">
-        <span><span class="swatch" style="background:#ff9ad5"></span>A(ω) = F₀ / √((k − mω²)² + (cω)²)</span>
-        <span><span class="swatch dashed" style="background:#4cc2ff"></span>ω₀</span>
-        <span><span class="swatch" style="background:#ffb454"></span>Current ω_d</span>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optArc" checked /> <label for="optArc">Angle arc near origin</label>
       </div>
-      <canvas id="resonance" width="800" height="220"></canvas>
-    </div>
-  </main>
-</div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optDot" checked /> <label for="optDot">Moving dot</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optAutofit" checked /> <label for="optAutofit">Auto-fit scale</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optMarkers" checked /> <label for="optMarkers">Key-θ markers</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="optSidePlot" checked /> <label for="optSidePlot">Show r-vs-θ side plot</label>
+      </div>
+    </aside>
 
-<script src="sim.js"></script>
+    <main class="stage">
+      <section class="panel">
+        <div class="legend">
+          <span><span class="swatch" style="background: var(--accent);"></span>r(θ) trace</span>
+          <span style="color: var(--accent-2);"><span class="swatch dot filled"></span>current θ</span>
+          <span style="color: var(--ok);"><span class="swatch dot filled"></span>local max of |r|</span>
+          <span style="color: var(--muted);"><span class="swatch dot"></span>r = 0</span>
+        </div>
+        <div class="canvas-wrap polar">
+          <canvas id="polar"></canvas>
+          <div class="challenge-overlay hidden" id="challengeOverlay">
+            <div class="title">Sketch this in your head.</div>
+            <div class="body">
+              Read the formula and the r-vs-θ side plot below. Predict petal count, max |r|, where r hits zero,
+              and the symmetry. Then click Reveal to verify.
+            </div>
+            <button id="revealBtn" class="primary">Reveal</button>
+          </div>
+        </div>
+        <div class="hud">
+          <div class="item"><div class="k">θ</div><div class="v" id="hudTheta">0.000</div></div>
+          <div class="item"><div class="k">r(θ)</div><div class="v" id="hudR">0.000</div></div>
+          <div class="item"><div class="k">x, y</div><div class="v" id="hudXY">0.000, 0.000</div></div>
+          <div class="item"><div class="k">Period</div><div class="v" id="hudPeriod">2π</div></div>
+        </div>
+      </section>
+
+      <section class="panel" id="sidePlotPanel">
+        <h2>r-vs-θ side plot</h2>
+        <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--muted); line-height: 1.5;">
+          The plot below is on standard xy axes — θ on the horizontal, r on the vertical. Each bump above the
+          axis is a piece of the curve; each crossing of r = 0 is a return to the origin in the polar plane.
+        </p>
+        <div class="canvas-wrap strip">
+          <canvas id="rTheta"></canvas>
+        </div>
+      </section>
+
+      <section class="panel about-panel">
+        <h2 id="aboutName">Curve</h2>
+        <div class="formula" id="aboutFormula"></div>
+        <p id="aboutDesc"></p>
+
+        <h3>Shortcuts (recognise it fast)</h3>
+        <ul id="aboutShortcuts"></ul>
+
+        <div class="symmetry-line" id="aboutSymmetry"></div>
+
+        <h3>Sketching recipe</h3>
+        <ol id="aboutRecipe"></ol>
+
+        <h3>Key features</h3>
+        <ul id="aboutKey"></ul>
+
+        <h3>Exam tips</h3>
+        <ul id="aboutTips"></ul>
+      </section>
+
+      <details class="panel logic-panel" open>
+        <summary>The polar sketching toolkit (always applicable)</summary>
+
+        <h3>1. Plot r-vs-θ first</h3>
+        <p>
+          When you see <span class="mono">r = f(θ)</span>, your first move is <em>not</em> to sketch in the polar plane —
+          it is to plot r as a function of θ on standard xy axes. Mark the zeros, the maxes, and the mins. Then
+          translate: at each θ where r = 0 the curve passes through the origin; at each θ where |r| peaks the
+          curve reaches its furthest point in that direction. Connect with smooth arcs.
+        </p>
+        <div class="callout"><strong>Look up.</strong> The strip plot above is exactly that side graph, animating in
+          lock-step with the polar trace. The orange dot in both views is at the same θ.</div>
+
+        <h3>2. Three symmetry tests</h3>
+        <ul>
+          <li><strong>Polar axis (x-axis):</strong> replace θ → −θ. If the equation is unchanged, the graph is symmetric about the x-axis. (cos θ passes; sin θ fails.)</li>
+          <li><strong>Line θ = π/2 (y-axis):</strong> replace θ → π − θ. (sin θ passes; cos θ fails.)</li>
+          <li><strong>Origin:</strong> replace r → −r, or replace θ → θ + π. If unchanged, the graph is symmetric through the origin.</li>
+        </ul>
+        <p>Each passing test cuts your sketching work in half — you only sketch one side, then mirror.</p>
+
+        <h3>3. Period and range</h3>
+        <p>
+          Don't trace redundant θ. <span class="mono">cos kθ</span> and <span class="mono">sin kθ</span> have period
+          <span class="mono">2π/k</span>, but the curve in the polar plane often closes earlier or later depending
+          on whether negative-r values retrace existing branches. Quick rules:
+        </p>
+        <ul>
+          <li>Roses with even k repeat over [0, 2π]; with odd k the negative-r half retraces the positive-r half, so the curve closes over [0, π].</li>
+          <li>Limaçons / cardioids close over [0, 2π].</li>
+          <li>Spirals never close — pick the θ range you care about.</li>
+        </ul>
+
+        <h3>4. What negative r means</h3>
+        <p>
+          A point with negative r is plotted in the <em>opposite</em> direction — equivalent to (|r|, θ + π).
+          That's why even-k roses get 2k petals (the negative-r half draws new petals between the positive ones)
+          and why limaçons with a &lt; b acquire an inner loop (the curve dips through the origin and comes out
+          backwards).
+        </p>
+      </details>
+    </main>
+  </div>
+
+  <script src="polar.js"></script>
 </body>
 </html>
