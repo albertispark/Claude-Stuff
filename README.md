@@ -1,6 +1,10 @@
-# Simple Harmonic Motion Simulator
+# Polar-Coordinates Sketcher
 
-An interactive, single-page simulator for a spring-mass system — with optional viscous damping, gravity, environment presets, a second spring, and a sinusoidal driving force.
+An interactive, single-page tool for building instinct around polar curves. The point isn't to draw pretty graphs — it's to train the workflow you'd actually use to sketch one of these curves by hand on an exam:
+
+> **Plot r as a function of θ on a standard xy axis first.** Read off the zeros, maxes, mins. Then translate that into the polar plane petal-by-petal.
+
+So the tool always shows you both views at once — the polar plot on top, the r-vs-θ side plot underneath, animating in lock-step — plus the logic and shortcuts for each curve family.
 
 ## Run it
 
@@ -12,44 +16,42 @@ python3 -m http.server 8000
 # then visit http://localhost:8000
 ```
 
-Files: `index.html` (structure), `style.css` (theme), `sim.js` (physics + rendering).
+Files: `index.html` (structure), `style.css` (theme), `polar.js` (curve catalog + rendering).
 
-## Physics
+## Curve catalog
 
-Integrates, via RK4 with adaptive substeps:
+| Curve | Formula | Knobs |
+|---|---|---|
+| Circle (origin-centred) | r = a | a |
+| Off-centre circle | r = 2a · cos θ (or sin) | a, variant |
+| Rose | r = a · cos(kθ) (or sin) | a, k (integer), variant |
+| Cardioid | r = a · (1 + cos θ) (or sin) | a, variant |
+| Limaçon | r = a + b · cos θ (or sin) | a, b, variant |
+| Archimedean spiral | r = a + b · θ | a, b |
+| Lemniscate of Bernoulli | r² = a² · cos(2θ) (or sin) | a, variant |
+| Logarithmic spiral | r = a · e^(b·θ) | a, b |
 
-```
-m·ẍ + c·ẋ + k_eff·x = F₀·cos(ω_d·t)
-```
+For each curve the **About** panel always shows: a one-paragraph description, fast-recognition **Shortcuts**, the **Symmetry** check (which of the three reflection tests pass), a step-by-step **Sketching recipe**, **Key features**, and **Exam tips**. The persistent **Sketching Toolkit** panel below it covers the general workflow regardless of which curve you have selected.
 
-where `x` is displacement from equilibrium and `k_eff = k₁ + (k₂ if enabled)`. In vertical mode, gravity shifts the equilibrium by `Δ = m·g / k_eff`; the ODE is unchanged, so total mechanical energy `E = ½mv² + ½k_eff·x²` cleanly shows the damping loss.
+## Modes
 
-## Features
+- **Continuous** (default) — Play / Pause / Reset. The orange dot traces both plots in lock-step at the chosen sweep speed.
+- **Step** — `◀ Step` / `Step ▶` advance θ by the curve's natural increment (e.g. quarter-petal for a rose, π/4 for a cardioid), snapping to nearby key-θ values when it can. Great for building each piece of the curve one quarter at a time.
+- **Challenge** — hides the polar canvas, leaves the formula and r-vs-θ side plot visible. You sketch in your head; click **Reveal** to verify.
 
-- **Orientation toggle** — horizontal (spring from a left wall) or vertical (spring hanging from a ceiling). Gravity is auto-applied in vertical mode.
-- **Optional second spring** — add one on the right wall (horizontal) or floor (vertical). Both springs have independently editable stiffness `k` and natural length `L`.
-- **Environment presets** — Vacuum / Air / Water / Oil / Honey / Custom, which set the viscous damping coefficient `c`.
-- **Manual number entry** alongside every slider (typed values can exceed slider bounds).
-- **Driving force** — sinusoidal, with amplitude and angular frequency.
-- **Damping diagnostics** — live readouts for damping ratio ζ = c/(2√(mk)), damped frequency ω_d = ω₀√(1−ζ²), and a regime badge (undamped / underdamped / critical / overdamped).
+## Display toggles
 
-## Views
-
-- **System** — live spring-mass animation with equilibrium marker, velocity arrow, and gravity arrow (in vertical mode).
-- **Time series** — x(t) and ẋ(t)/3 on a scrolling plot with a dashed ±x₀·e^(−ζω₀t) envelope for undriven underdamped cases.
-- **Phase space** — (x, ẋ) trajectory with fading trail.
-- **Energy vs time** — ½mv² + ½k_eff·x², flat when undamped, decaying under damping.
-- **Amplitude vs driving frequency** — A(ω) = F₀/√((k−mω²)² + (cω)²), with markers at ω₀ and the current driver frequency; the resonance peak sharpens as c decreases.
-
-## Readouts
-
-Time, position, velocity, total energy, `k_eff`, natural `ω₀`, period `T`, damping ratio `ζ`, damped `ω_d`, regime, and (in vertical mode) gravity stretch `Δ`.
+Degrees vs radians, Cartesian-axes overlay, swept-radius line, angle arc near origin, moving dot, auto-fit scale, key-θ markers (zeros, maxes, mins), and the side plot itself.
 
 ## Things to try
 
-- **Clean exam period** — type `m = 1`, `k₁ = 39.478` (≈ 4π²). The period readout should be exactly 1.00 s.
-- **Vertical gravity stretch** — switch to vertical with default values. The spring visibly stretches by `Δ = mg/k₁ ≈ 0.98 m` and the Δ readout shows it.
-- **Resonance** — enable driver at low `F₀`, sweep `ω_d` across `ω₀`. Drop `c` and watch the resonance peak sharpen.
-- **Damping regimes** — with m = 1, k = 10, critical damping is at c = 2√(mk) ≈ 6.32. Sweep c through 3 → 6.32 → 10 to see the regime badge flip.
-- **Opposing springs** — enable spring 2 with equal k. Period drops by factor √2 (k_eff doubles).
-- **Environments** — switch to Water / Oil / Honey to see the phase-space spiral collapse faster.
+- **Rose petal-count parity** — set rose, slide k from 1 to 10. Notice that odd k gives k petals (the curve closes by θ = π) and even k gives 2k petals (the negative-r half draws fresh petals between).
+- **Limaçon transitions** — set limaçon, fix b = 2, slide a from 0 → 4. Watch the curve walk through inner-loop (a < b) → cardioid (a = b) → dimpled (b < a < 2b) → convex (a ≥ 2b). The shortcuts panel has the rule.
+- **Lemniscate gaps** — set lemniscate. The side plot literally has *gaps* — those are the θ ranges where r² < 0, i.e. where the curve is undefined. The polar plot shows two lobes meeting at the origin.
+- **Side-plot first** — turn on Challenge mode with rose, sin variant, k = 3. The side plot shows three positive bumps and three negative bumps over [0, 2π]. Predict the polar shape (six petals, oriented with one along +y), then click Reveal.
+- **Step through a cardioid** — set cardioid, switch to Step mode, click `Step ▶` four times. Each click lands on a key-θ (max, zero, etc.); the curve builds in chunks rather than as one continuous sweep.
+- **Spiral arm spacing** — set Archimedean, slide b. The radial gap between successive turns is exactly 2πb — measurable directly on the polar grid.
+
+## Pedagogical core
+
+The main thing this tool does that a generic grapher doesn't: it never lets you forget the **r-vs-θ first** workflow. The side plot animates in lock-step with the polar trace, the same θ-marker is shown on both, and key-θ values (zeros / maxes / mins) are dotted on both views with consistent colour conventions. The Symmetry line and Shortcuts on every curve teach the fast-recognition rules a student deploys in seconds on an exam.
