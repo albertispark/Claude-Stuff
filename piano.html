@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sheet Music → Piano Hands</title>
+  <link rel="stylesheet" href="piano.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Sheet Music → Piano Hands</h1>
+      <div class="subtitle">Upload a picture of sheet music — see where each hand goes, bar by bar.</div>
+    </div>
+    <div id="songBadge" class="badge hidden"></div>
+  </header>
+
+  <div class="layout">
+    <!-- ───────────── Sidebar controls ───────────── -->
+    <aside class="panel sidebar">
+      <h2>Input</h2>
+
+      <div class="control">
+        <label for="apiKey">Anthropic API key <span class="value">browser only</span></label>
+        <input id="apiKey" type="password" class="text-input" placeholder="sk-ant-..." autocomplete="off" />
+        <p class="note">Stored only in this browser (localStorage). Used to read your sheet-music image with a vision model. Never sent anywhere except api.anthropic.com.</p>
+      </div>
+
+      <div id="dropzone" class="dropzone">
+        <input id="fileInput" type="file" accept="image/*" class="hidden" />
+        <div class="dz-inner">
+          <strong>Drop a sheet-music image</strong>
+          <span>or click to choose · PNG / JPG</span>
+        </div>
+        <img id="preview" class="preview hidden" alt="sheet music preview" />
+      </div>
+
+      <div class="button-row">
+        <button id="analyzeBtn" class="primary" disabled>Read the music</button>
+        <button id="sampleBtn">Load sample song</button>
+      </div>
+
+      <div class="button-row single">
+        <button id="pasteToggle">Paste / edit JSON ▾</button>
+      </div>
+      <div id="pasteWrap" class="hidden">
+        <textarea id="jsonInput" class="json-input mono" spellcheck="false"
+          placeholder='{ "title": "...", "timeSignature": "4/4", "tempoBpm": 96, "bars": [ ... ] }'></textarea>
+        <div class="button-row single">
+          <button id="loadJsonBtn">Load this JSON</button>
+        </div>
+      </div>
+
+      <h2>Transport</h2>
+      <div class="segmented" id="stepMode">
+        <button data-mode="beat" class="active">Step by beat</button>
+        <button data-mode="bar">Step by bar</button>
+      </div>
+
+      <div class="button-row">
+        <button id="prevBtn">◀ Prev</button>
+        <button id="nextBtn">Next ▶</button>
+      </div>
+      <div class="button-row">
+        <button id="playBtn" class="primary">▶ Play</button>
+        <button id="muteBtn">🔊 Sound on</button>
+      </div>
+
+      <div class="control" style="margin-top:0.75rem;">
+        <label for="tempoRange">Tempo <span class="value"><span id="tempoOut">96</span> bpm</span></label>
+        <div class="dual">
+          <input id="tempoRange" type="range" min="30" max="220" step="1" value="96" />
+          <input id="tempoNum" type="number" min="30" max="220" step="1" value="96" />
+        </div>
+      </div>
+
+      <p id="status" class="note"></p>
+    </aside>
+
+    <!-- ───────────── Stage ───────────── -->
+    <main class="stage">
+      <div class="panel">
+        <div class="legend">
+          <span><span class="swatch-box right"></span> Right hand</span>
+          <span><span class="swatch-box left"></span> Left hand</span>
+          <span class="muted">Numbers on keys = fingers (1 = thumb … 5 = pinky)</span>
+        </div>
+        <canvas id="piano" height="260"></canvas>
+        <div class="readout">
+          <div class="item"><div class="k">Song</div><div class="v" id="rTitle">—</div></div>
+          <div class="item"><div class="k">Time</div><div class="v" id="rTime">—</div></div>
+          <div class="item"><div class="k">Bar</div><div class="v" id="rBar">—</div></div>
+          <div class="item"><div class="k">Beat</div><div class="v" id="rBeat">—</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>This bar, part by part</h2>
+        <div id="parts" class="parts">
+          <p class="note">Load a song to see each hand's notes for the current bar.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="piano.js"></script>
+</body>
+</html>
